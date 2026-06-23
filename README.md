@@ -26,4 +26,3 @@ Firebase CLI로 직접 배포하려면 `.firebaserc.example`을 `.firebaserc`로
 ## 배포 흐름
 
 GitHub 저장소의 `main` 브랜치로 push하면 `.github/workflows/firebase-hosting.yml`이 실행되고 Firebase Hosting의 live 채널로 배포됩니다.
-# pump
