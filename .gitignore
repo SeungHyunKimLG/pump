@@ -8,6 +8,8 @@ node_modules/
 .env.*
 *-service-account*.json
 serviceAccount*.json
+firebase.exe
+firepit-log.txt
 
 # Workspace source materials that should not be pushed with the web app.
 26.06.23.m4a
