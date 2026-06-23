@@ -1,0 +1,16 @@
+.firebase/
+.firebaserc
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+node_modules/
+.env
+.env.*
+*-service-account*.json
+serviceAccount*.json
+
+# Workspace source materials that should not be pushed with the web app.
+26.06.23.m4a
+models/
+tools/
+transcripts/
