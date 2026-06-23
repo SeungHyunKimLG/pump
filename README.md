@@ -13,9 +13,9 @@
 
 GitHub 저장소의 `Settings > Secrets and variables > Actions`에 아래 값만 추가합니다.
 
-- `FIREBASE_SERVICE_ACCOUNT`
+- `FIREBASE_TOKEN`
 
-`FIREBASE_SERVICE_ACCOUNT`는 Firebase 프로젝트 설정의 서비스 계정 JSON 전체 내용입니다. JSON 파일 자체는 저장소에 올리지 마세요.
+`FIREBASE_TOKEN`은 Firebase CLI 로그인으로 만든 CI 토큰입니다. 토큰은 저장소 파일에 넣지 말고 GitHub Actions Secret에만 저장하세요.
 
 ## 로컬에서 먼저 확인
 
