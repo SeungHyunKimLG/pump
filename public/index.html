@@ -14,6 +14,9 @@
     .hero p{max-width:840px;color:#e2e8f0;font-size:18px;line-height:1.7}
     .status{display:inline-flex;align-items:center;gap:8px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px;margin-top:16px}
     .notice{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:8px;padding:14px 16px;margin:20px 0;font-weight:700;line-height:1.6}
+    .authpanel{padding:18px;margin-bottom:18px}
+    .authbar{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+    .authmsg{color:#64748b;font-size:14px;font-weight:700;margin:10px 0 0}
     .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}
     .card{background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
     .kpi{padding:18px;display:flex;gap:12px;align-items:center}
@@ -55,7 +58,7 @@
     .buttonline{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     .smallbtn{border:0;border-radius:8px;background:#e0f2fe;color:#075985;padding:10px 14px;font-weight:900;cursor:pointer}
     .dangerbtn{background:#fee2e2;color:#991b1b}
-    @media(max-width:860px){.grid4{grid-template-columns:repeat(2,1fr)}.step ul,.checkgrid,.journal{grid-template-columns:1fr}}
+    @media(max-width:860px){.grid4{grid-template-columns:repeat(2,1fr)}.authbar,.step ul,.checkgrid,.journal{grid-template-columns:1fr}}
     @media(max-width:560px){.grid4{grid-template-columns:1fr}.checkitem{flex-wrap:wrap}.datebox{width:100%;margin-left:32px}}
   </style>
 </head>
@@ -70,7 +73,17 @@
   </section>
 
   <main class="wrap">
-    <div class="notice">기본 저장은 브라우저 localStorage입니다. Firebase 웹앱 설정값을 넣고 Anonymous Auth와 Firestore를 켜면 GitHub에서 배포된 페이지도 같은 기록을 공유합니다.</div>
+    <div class="notice">기본 저장은 브라우저 localStorage입니다. Firebase 로그인 후에는 Firestore에도 같은 기록이 동기화됩니다.</div>
+
+    <section class="card authpanel" id="authPanel">
+      <h2>Firebase 로그인</h2>
+      <div class="authbar">
+        <label class="field">이메일<input id="firebaseEmail" type="email" autocomplete="username"></label>
+        <label class="field">비밀번호<input id="firebasePassword" type="password" autocomplete="current-password"></label>
+        <button class="smallbtn" id="firebaseLogin" type="button">로그인</button>
+      </div>
+      <p class="authmsg" id="authMessage">로그인 전에는 이 브라우저에만 저장됩니다.</p>
+    </section>
 
     <section class="grid4">
       <div class="card kpi"><div class="ico">🔧</div><div><p class="small">적용 대상</p><p class="big">실험실 펌프</p></div></div>
@@ -146,8 +159,15 @@
     let docRef = null;
     let firebaseEnabled = false;
     let saveTimer = null;
+    let auth = null;
+    let db = null;
+    let signInWithEmailAndPassword = null;
 
     const statusEl = document.getElementById("syncStatus");
+    const authMessageEl = document.getElementById("authMessage");
+    const emailEl = document.getElementById("firebaseEmail");
+    const passwordEl = document.getElementById("firebasePassword");
+    const loginEl = document.getElementById("firebaseLogin");
     const firebaseReady = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE_") && firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("PASTE_");
 
     function today(){
@@ -157,6 +177,10 @@
 
     function setStatus(text){
       statusEl.textContent = text;
+    }
+
+    function setAuthMessage(text){
+      authMessageEl.textContent = text;
     }
 
     function collectData(){
@@ -265,6 +289,11 @@
         saveFirebaseNow();
       });
 
+      loginEl.addEventListener("click", loginFirebase);
+      passwordEl.addEventListener("keydown", event => {
+        if(event.key === "Enter") loginFirebase();
+      });
+
       document.getElementById("resetLocal").addEventListener("click", () => {
         if(confirm("이 브라우저의 로컬 저장 기록을 초기화할까요?")){
           localStorage.removeItem(LOCAL_KEY);
@@ -273,31 +302,83 @@
       });
     }
 
+    async function connectFirestoreForUser(user, doc, getDoc){
+      docRef = doc(db, COLLECTION_NAME, FIREBASE_DOC_ID);
+      firebaseEnabled = true;
+      setStatus(`Firebase 로그인됨: ${user.email}`);
+      setAuthMessage("Firestore 동기화가 켜졌습니다.");
+
+      const snap = await getDoc(docRef);
+      if(snap.exists()) {
+        applyData(snap.data());
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(collectData()));
+        setStatus("Firebase 기록 불러옴");
+      }
+    }
+
+    async function loginFirebase(){
+      if(!firebaseReady || !auth || !signInWithEmailAndPassword) {
+        setAuthMessage("Firebase 설정을 먼저 확인하세요.");
+        return;
+      }
+
+      const email = emailEl.value.trim();
+      const password = passwordEl.value;
+
+      if(!email || !password) {
+        setAuthMessage("이메일과 비밀번호를 입력하세요.");
+        return;
+      }
+
+      try {
+        loginEl.disabled = true;
+        setAuthMessage("로그인 중입니다.");
+        await signInWithEmailAndPassword(auth, email, password);
+        localStorage.setItem("pump_firebase_email", email);
+        passwordEl.value = "";
+      } catch(e) {
+        console.error(e);
+        firebaseEnabled = false;
+        setStatus("Firebase 로그인 실패 - 로컬 저장 모드");
+        setAuthMessage("로그인 정보를 확인하세요.");
+      } finally {
+        loginEl.disabled = false;
+      }
+    }
+
     async function initFirebase(){
       if(!firebaseReady) {
         setStatus("로컬 자동 저장 모드");
+        setAuthMessage("Firebase 설정값이 없어 로컬 저장만 사용합니다.");
         return;
       }
 
       try {
         const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
-        const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+        const authModule = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
         const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
         const app = initializeApp(firebaseConfig);
-        await signInAnonymously(getAuth(app));
+        auth = authModule.getAuth(app);
+        signInWithEmailAndPassword = authModule.signInWithEmailAndPassword;
+        db = getFirestore(app);
+        emailEl.value = localStorage.getItem("pump_firebase_email") || "";
+        setStatus("Firebase 로그인 필요");
+        setAuthMessage("등록된 이메일과 비밀번호로 로그인하세요.");
 
-        const db = getFirestore(app);
-        docRef = doc(db, COLLECTION_NAME, FIREBASE_DOC_ID);
-        firebaseEnabled = true;
-        setStatus("Firebase 연결됨");
-
-        const snap = await getDoc(docRef);
-        if(snap.exists()) {
-          applyData(snap.data());
-          localStorage.setItem(LOCAL_KEY, JSON.stringify(collectData()));
-          setStatus("Firebase 기록 불러옴");
-        }
+        authModule.onAuthStateChanged(auth, user => {
+          if(user) {
+            connectFirestoreForUser(user, doc, getDoc).catch(e => {
+              console.error(e);
+              firebaseEnabled = false;
+              setStatus("Firebase 기록 불러오기 실패 - 로컬 저장 모드");
+              setAuthMessage("Firestore 접근 권한을 확인하세요.");
+            });
+          } else {
+            firebaseEnabled = false;
+            docRef = null;
+          }
+        });
       } catch(e) {
         console.error(e);
         firebaseEnabled = false;
