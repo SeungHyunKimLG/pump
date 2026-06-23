@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>펌프 오일 배출·세척·재주입 체크리스트</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;background:#f8fafc;color:#0f172a}
+    .hero{background:linear-gradient(135deg,#020617,#172554 55%,#0f172a);color:white;padding:48px 20px}
+    .wrap{max-width:1120px;margin:0 auto}
+    .badge{display:inline-block;background:rgba(59,130,246,.22);color:#dbeafe;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:800;margin-bottom:16px}
+    h1{font-size:clamp(32px,6vw,56px);line-height:1.08;margin:0}
+    .hero p{max-width:840px;color:#e2e8f0;font-size:18px;line-height:1.7}
+    .status{display:inline-flex;align-items:center;gap:8px;background:#ecfeff;border:1px solid #a5f3fc;color:#155e75;border-radius:999px;padding:8px 12px;font-weight:800;font-size:13px;margin-top:16px}
+    .notice{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:8px;padding:14px 16px;margin:20px 0;font-weight:700;line-height:1.6}
+    .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}
+    .card{background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+    .kpi{padding:18px;display:flex;gap:12px;align-items:center}
+    .ico{width:46px;height:46px;border-radius:8px;background:#eff6ff;display:grid;place-items:center;font-size:24px;flex:0 0 auto}
+    .small{color:#64748b;font-size:14px;margin:0 0 4px}
+    .big{font-size:20px;font-weight:900;margin:0}
+    main{padding:28px 20px}
+    .section{padding:24px;margin-bottom:18px}
+    h2{margin:0 0 14px;font-size:26px}
+    .steps{display:grid;gap:14px}
+    .step{padding:18px}
+    .step h3{margin:0}
+    .tag{display:inline-block;border-radius:999px;background:#f1f5f9;padding:5px 9px;font-size:12px;font-weight:900;color:#334155;margin:8px 0 10px}
+    .warn{background:#fee2e2;color:#991b1b}
+    .dry{background:#dcfce7;color:#166534}
+    .step ul{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0;margin:0;list-style:none}
+    .step li{background:#f8fafc;border-radius:8px;padding:12px;font-size:14px;line-height:1.55}
+    .step li:before{content:'✓';color:#16a34a;font-weight:900;margin-right:8px}
+    .progress{height:12px;background:#f1f5f9;border-radius:999px;overflow:hidden;margin:10px 0 14px}
+    .bar{height:100%;width:0;background:#2563eb}
+    .progressText{color:#64748b;font-size:14px;margin:0 0 14px}
+    .checkgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .checkitem{display:flex;align-items:center;gap:12px;border:1px solid #e2e8f0;border-radius:8px;padding:14px;background:white;font-weight:800}
+    .checkitem.done{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+    .checkitem input[type=checkbox]{width:21px;height:21px;accent-color:#2563eb;flex:0 0 auto}
+    .datebox{margin-left:auto;display:flex;align-items:center;gap:8px;color:#64748b;font-size:13px;white-space:nowrap}
+    .datebox input{border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px}
+    .journal{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .field{display:grid;gap:6px;font-weight:800;font-size:14px;color:#334155}
+    .field input,.field textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font:inherit;background:white}
+    .field textarea{min-height:90px}
+    .full{grid-column:1/-1}
+    .trouble{display:grid;gap:12px}
+    .trouble div{border:1px solid #e2e8f0;border-radius:8px;padding:15px;background:white}
+    .trouble p{margin:6px 0 0;line-height:1.55}
+    .action{color:#1d4ed8}
+    .memo{background:#0f172a;color:white;border-radius:8px;padding:22px}
+    .memo p{color:#cbd5e1;line-height:1.7}
+    .buttonline{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .smallbtn{border:0;border-radius:8px;background:#e0f2fe;color:#075985;padding:10px 14px;font-weight:900;cursor:pointer}
+    .dangerbtn{background:#fee2e2;color:#991b1b}
+    @media(max-width:860px){.grid4{grid-template-columns:repeat(2,1fr)}.step ul,.checkgrid,.journal{grid-template-columns:1fr}}
+    @media(max-width:560px){.grid4{grid-template-columns:1fr}.checkitem{flex-wrap:wrap}.datebox{width:100%;margin-left:32px}}
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="wrap">
+      <span class="badge">합성생산기술팀 실험실 펌프 관리</span>
+      <h1>펌프 오일 배출·세척·재주입 가이드</h1>
+      <p>모든 항목이 한 화면에 보이는 정적 구조를 유지하면서, 체크리스트와 작업일지는 자동 저장되도록 구성했습니다. Firebase 설정값을 넣으면 Firestore에도 자동 동기화됩니다.</p>
+      <div id="syncStatus" class="status">로컬 자동 저장 준비됨</div>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <div class="notice">기본 저장은 브라우저 localStorage입니다. Firebase 웹앱 설정값을 넣고 Anonymous Auth와 Firestore를 켜면 GitHub에서 배포된 페이지도 같은 기록을 공유합니다.</div>
+
+    <section class="grid4">
+      <div class="card kpi"><div class="ico">🔧</div><div><p class="small">적용 대상</p><p class="big">실험실 펌프</p></div></div>
+      <div class="card kpi"><div class="ico">🧪</div><div><p class="small">세척 순서</p><p class="big">Hexane → Acetone</p></div></div>
+      <div class="card kpi"><div class="ico">🌬️</div><div><p class="small">건조 방식</p><p class="big">N₂ 건조</p></div></div>
+      <div class="card kpi"><div class="ico">🛢️</div><div><p class="small">완료 기준</p><p class="big">오일 눈금</p></div></div>
+    </section>
+
+    <section class="card section">
+      <h2>1. 작업 절차</h2>
+      <div class="steps">
+        <article class="card step"><h3>💧 1. 드레인 밸브를 통한 기존 오일 배출</h3><span class="tag">Drain</span><ul><li>드레인 밸브를 개방합니다.</li><li>기존 오일을 폐오일 용기에 모두 배출합니다.</li><li>오일 색상, 이물, 수분 혼입 여부를 관찰합니다.</li><li>잔류 오일이 더 이상 떨어지지 않는지 확인합니다.</li></ul></article>
+        <article class="card step"><h3>🧪 2. n-Hexane을 이용한 1차 세척</h3><span class="tag warn">n-Hexane</span><ul><li>n-Hexane으로 내부 잔류 오일을 세척합니다.</li><li>오염원이 충분히 씻겨 나오도록 세척합니다.</li><li>세척액은 지정 폐액 용기에 회수합니다.</li><li>배출액의 오일성 오염 감소 여부를 확인합니다.</li></ul></article>
+        <article class="card step"><h3>🧴 3. Acetone을 이용한 추가 세척</h3><span class="tag warn">Acetone</span><ul><li>Acetone으로 추가 세척합니다.</li><li>미세 오염원과 세척 잔류물을 제거합니다.</li><li>Acetone 세척액은 지정 폐액 용기에 분리 회수합니다.</li><li>배출액에 탁도나 이물이 없는지 확인합니다.</li></ul></article>
+        <article class="card step"><h3>🌬️ 4. N₂ 건조</h3><span class="tag dry">N₂ Dry</span><ul><li>N₂를 이용해 내부를 건조합니다.</li><li>용매 냄새 또는 액상 잔류물이 없는지 확인합니다.</li><li>배출 방향과 주변 환기를 확인합니다.</li><li>건조 완료 전 오일을 주입하지 않습니다.</li></ul></article>
+        <article class="card step"><h3>🛢️ 5. 신규 오일 주입</h3><span class="tag">Oil Fill</span><ul><li>오일 투입구를 열고 지정 오일을 주입합니다.</li><li>오일 눈금을 보며 적정량까지 채웁니다.</li><li>과충전 또는 부족 주입을 방지합니다.</li><li>레벨 안정 후 다시 확인합니다.</li></ul></article>
+        <article class="card step"><h3>▶️ 6. 밀폐 및 재가동</h3><span class="tag">Restart</span><ul><li>드레인 밸브, 투입구, 개방부를 모두 닫습니다.</li><li>주변 오일 또는 용매 누출을 확인합니다.</li><li>펌프를 재가동합니다.</li><li>소음, 진동, 누유 여부를 확인합니다.</li></ul></article>
+      </div>
+    </section>
+
+    <section class="card section">
+      <h2>2. 체크리스트</h2>
+      <div class="progress"><div id="progressBar" class="bar"></div></div>
+      <p id="progressText" class="progressText">완료율 0% · 0/10</p>
+      <div class="checkgrid" id="checkGrid">
+        <div class="checkitem" data-key="기존 오일 전량 배출 완료"><input type="checkbox"><span>기존 오일 전량 배출 완료</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="폐오일 회수 완료"><input type="checkbox"><span>폐오일 회수 완료</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="n-Hexane 1차 세척 완료"><input type="checkbox"><span>n-Hexane 1차 세척 완료</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="Acetone 2차 세척 완료"><input type="checkbox"><span>Acetone 2차 세척 완료</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="세척 폐액 분리 회수 완료"><input type="checkbox"><span>세척 폐액 분리 회수 완료</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="N₂ 건조 완료"><input type="checkbox"><span>N₂ 건조 완료</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="용매/액상 잔류 없음 확인"><input type="checkbox"><span>용매/액상 잔류 없음 확인</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="신규 오일 적정 눈금 주입"><input type="checkbox"><span>신규 오일 적정 눈금 주입</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="드레인·투입구·개방부 밀폐"><input type="checkbox"><span>드레인·투입구·개방부 밀폐</span><label class="datebox">완료일 <input type="date"></label></div>
+        <div class="checkitem" data-key="재가동 후 누유·소음·진동 확인"><input type="checkbox"><span>재가동 후 누유·소음·진동 확인</span><label class="datebox">완료일 <input type="date"></label></div>
+      </div>
+      <div class="buttonline"><button class="smallbtn" id="saveNow">수동 저장</button><button class="smallbtn dangerbtn" id="resetLocal">로컬 기록 초기화</button></div>
+    </section>
+
+    <section class="card section">
+      <h2>3. 작업일지</h2>
+      <div class="journal">
+        <label class="field">작업일<input id="workDate" type="date"></label>
+        <label class="field">작업자<input id="worker" placeholder="예: 김승현"></label>
+        <label class="field">펌프명/TAG<input id="pumpTag" placeholder="예: 실험실 펌프 P-01"></label>
+        <label class="field">주입 오일<input id="oilName" placeholder="지정 오일명"></label>
+        <label class="field">오일 Lot No.<input id="oilLot"></label>
+        <label class="field">이상 여부<input id="issue" placeholder="예: 이상 없음"></label>
+        <label class="field full">특이사항<textarea id="memo" placeholder="세척 상태, 배출액 상태, 재가동 후 확인 사항 등을 기록"></textarea></label>
+      </div>
+    </section>
+
+    <section class="card section">
+      <h2>4. 주의/트러블슈팅</h2>
+      <div class="trouble">
+        <div><strong>증상: n-Hexane 세척 후에도 오일성 오염이 보임</strong><p>가능 원인: 내부 잔류 오일 제거 부족 가능성</p><p class="action">권장 조치: 1차 세척 반복 및 배출액 상태 재확인</p></div>
+        <div><strong>증상: Acetone 세척 후 탁도 또는 이물 잔류</strong><p>가능 원인: 미세 오염원 또는 세척 사각부 잔류 가능성</p><p class="action">권장 조치: 배출액 확인 후 추가 세척 판단</p></div>
+        <div><strong>증상: N₂ 건조 후 용매 냄새 또는 액상 잔류</strong><p>가능 원인: 건조 부족 가능성</p><p class="action">권장 조치: 오일 주입 전 건조 상태 재확인</p></div>
+        <div><strong>증상: 재가동 후 누유 발생</strong><p>가능 원인: 밀폐 불량 가능성</p><p class="action">권장 조치: 즉시 정지 후 밀폐 상태 확인</p></div>
+      </div>
+    </section>
+
+    <section class="memo"><h2>현장 적용 메모</h2><p>본 화면은 합성생산기술팀 실험실 펌프용 절차 초안입니다. n-Hexane, Acetone 등 휘발성 용매 사용 시에는 실험실 기준, SDS, 국소배기, 폐액 분리 기준, 점화원 관리 기준을 반드시 따르세요.</p></section>
+  </main>
+
+  <script type="module">
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const FIREBASE_DOC_ID = "onsan-lab-pump-maintenance";
+    const LOCAL_KEY = "onsan_pump_maintenance_autosave_v1";
+    const COLLECTION_NAME = "pumpMaintenanceRecords";
+
+    let docRef = null;
+    let firebaseEnabled = false;
+    let saveTimer = null;
+
+    const statusEl = document.getElementById("syncStatus");
+    const firebaseReady = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE_") && firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("PASTE_");
+
+    function today(){
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+
+    function setStatus(text){
+      statusEl.textContent = text;
+    }
+
+    function collectData(){
+      const checklist = {};
+      document.querySelectorAll(".checkitem").forEach(row => {
+        const key = row.dataset.key;
+        checklist[key] = {
+          checked: row.querySelector('input[type="checkbox"]').checked,
+          date: row.querySelector('input[type="date"]').value || ""
+        };
+      });
+
+      const journal = {};
+      ["workDate","worker","pumpTag","oilName","oilLot","issue","memo"].forEach(id => {
+        journal[id] = document.getElementById(id).value || "";
+      });
+
+      return { checklist, journal, updatedAtLocal: new Date().toISOString() };
+    }
+
+    function applyData(data){
+      if(!data) return;
+
+      const checklist = data.checklist || {};
+      document.querySelectorAll(".checkitem").forEach(row => {
+        const key = row.dataset.key;
+        const saved = checklist[key] || {};
+        const cb = row.querySelector('input[type="checkbox"]');
+        const dt = row.querySelector('input[type="date"]');
+
+        cb.checked = !!saved.checked;
+        dt.value = saved.date || "";
+        row.classList.toggle("done", cb.checked);
+      });
+
+      const journal = data.journal || {};
+      ["workDate","worker","pumpTag","oilName","oilLot","issue","memo"].forEach(id => {
+        if(journal[id] !== undefined) document.getElementById(id).value = journal[id];
+      });
+
+      updateProgress();
+    }
+
+    function saveLocal(){
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(collectData()));
+      setStatus(firebaseEnabled ? "Firebase 동기화 대기 중" : "로컬 자동 저장됨");
+    }
+
+    async function saveFirebaseNow(){
+      if(!firebaseEnabled || !docRef) return;
+
+      try {
+        const { setDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        await setDoc(docRef, { ...collectData(), updatedAt: serverTimestamp() }, { merge: true });
+        setStatus("Firebase 저장 완료");
+      } catch(e) {
+        console.error(e);
+        setStatus("Firebase 저장 실패 - 로컬에는 저장됨");
+      }
+    }
+
+    function scheduleSave(){
+      saveLocal();
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveFirebaseNow, 800);
+    }
+
+    function updateProgress(){
+      const boxes = [...document.querySelectorAll('.checkitem input[type="checkbox"]')];
+      const done = boxes.filter(x => x.checked).length;
+      const pct = Math.round(done / boxes.length * 100);
+
+      document.getElementById("progressBar").style.width = pct + "%";
+      document.getElementById("progressText").textContent = `완료율 ${pct}% · ${done}/${boxes.length}`;
+    }
+
+    function initEvents(){
+      document.querySelectorAll(".checkitem").forEach(row => {
+        const cb = row.querySelector('input[type="checkbox"]');
+        const dt = row.querySelector('input[type="date"]');
+
+        cb.addEventListener("change", () => {
+          if(cb.checked && !dt.value) dt.value = today();
+          if(!cb.checked) dt.value = "";
+          row.classList.toggle("done", cb.checked);
+          updateProgress();
+          scheduleSave();
+        });
+
+        dt.addEventListener("change", () => {
+          if(dt.value){
+            cb.checked = true;
+            row.classList.add("done");
+          }
+          updateProgress();
+          scheduleSave();
+        });
+      });
+
+      ["workDate","worker","pumpTag","oilName","oilLot","issue","memo"].forEach(id => {
+        document.getElementById(id).addEventListener("input", scheduleSave);
+      });
+
+      document.getElementById("saveNow").addEventListener("click", () => {
+        scheduleSave();
+        saveFirebaseNow();
+      });
+
+      document.getElementById("resetLocal").addEventListener("click", () => {
+        if(confirm("이 브라우저의 로컬 저장 기록을 초기화할까요?")){
+          localStorage.removeItem(LOCAL_KEY);
+          location.reload();
+        }
+      });
+    }
+
+    async function initFirebase(){
+      if(!firebaseReady) {
+        setStatus("로컬 자동 저장 모드");
+        return;
+      }
+
+      try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+        const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+        const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+        const app = initializeApp(firebaseConfig);
+        await signInAnonymously(getAuth(app));
+
+        const db = getFirestore(app);
+        docRef = doc(db, COLLECTION_NAME, FIREBASE_DOC_ID);
+        firebaseEnabled = true;
+        setStatus("Firebase 연결됨");
+
+        const snap = await getDoc(docRef);
+        if(snap.exists()) {
+          applyData(snap.data());
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(collectData()));
+          setStatus("Firebase 기록 불러옴");
+        }
+      } catch(e) {
+        console.error(e);
+        firebaseEnabled = false;
+        setStatus("Firebase 연결 실패 - 로컬 저장 모드");
+      }
+    }
+
+    const local = JSON.parse(localStorage.getItem(LOCAL_KEY) || "null");
+    if(local) applyData(local);
+    if(!document.getElementById("workDate").value) document.getElementById("workDate").value = today();
+
+    initEvents();
+    updateProgress();
+    await initFirebase();
+    scheduleSave();
+  </script>
+</body>
+</html>
