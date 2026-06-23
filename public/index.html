@@ -16,6 +16,10 @@
     .notice{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:8px;padding:14px 16px;margin:20px 0;font-weight:700;line-height:1.6}
     .authpanel{padding:18px;margin-bottom:18px}
     .authbar{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+    .accountbar{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px}
+    .accountmeta{display:grid;gap:4px}
+    .accountlabel{color:#64748b;font-size:13px;font-weight:800}
+    .accountemail{font-size:16px;font-weight:900;color:#0f172a;word-break:break-all}
     .authmsg{color:#64748b;font-size:14px;font-weight:700;margin:10px 0 0}
     .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}
     .card{background:white;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
@@ -58,7 +62,8 @@
     .buttonline{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     .smallbtn{border:0;border-radius:8px;background:#e0f2fe;color:#075985;padding:10px 14px;font-weight:900;cursor:pointer}
     .dangerbtn{background:#fee2e2;color:#991b1b}
-    @media(max-width:860px){.grid4{grid-template-columns:repeat(2,1fr)}.authbar,.step ul,.checkgrid,.journal{grid-template-columns:1fr}}
+    [hidden]{display:none!important}
+    @media(max-width:860px){.grid4{grid-template-columns:repeat(2,1fr)}.authbar,.step ul,.checkgrid,.journal{grid-template-columns:1fr}.accountbar{align-items:flex-start;flex-direction:column}.accountbar .smallbtn{width:100%}}
     @media(max-width:560px){.grid4{grid-template-columns:1fr}.checkitem{flex-wrap:wrap}.datebox{width:100%;margin-left:32px}}
   </style>
 </head>
@@ -77,10 +82,17 @@
 
     <section class="card authpanel" id="authPanel">
       <h2>Firebase 로그인</h2>
-      <div class="authbar">
+      <div class="authbar" id="authForm">
         <label class="field">이메일<input id="firebaseEmail" type="email" autocomplete="username"></label>
         <label class="field">비밀번호<input id="firebasePassword" type="password" autocomplete="current-password"></label>
         <button class="smallbtn" id="firebaseLogin" type="button">로그인</button>
+      </div>
+      <div class="accountbar" id="accountPanel" hidden>
+        <div class="accountmeta">
+          <span class="accountlabel">현재 로그인 계정</span>
+          <span class="accountemail" id="accountEmail"></span>
+        </div>
+        <button class="smallbtn dangerbtn" id="firebaseLogout" type="button">로그아웃</button>
       </div>
       <p class="authmsg" id="authMessage">로그인 전에는 이 브라우저에만 저장됩니다.</p>
     </section>
@@ -162,12 +174,17 @@
     let auth = null;
     let db = null;
     let signInWithEmailAndPassword = null;
+    let signOut = null;
 
     const statusEl = document.getElementById("syncStatus");
     const authMessageEl = document.getElementById("authMessage");
+    const authFormEl = document.getElementById("authForm");
+    const accountPanelEl = document.getElementById("accountPanel");
+    const accountEmailEl = document.getElementById("accountEmail");
     const emailEl = document.getElementById("firebaseEmail");
     const passwordEl = document.getElementById("firebasePassword");
     const loginEl = document.getElementById("firebaseLogin");
+    const logoutEl = document.getElementById("firebaseLogout");
     const firebaseReady = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("PASTE_") && firebaseConfig.projectId && !firebaseConfig.projectId.startsWith("PASTE_");
 
     function today(){
@@ -181,6 +198,25 @@
 
     function setAuthMessage(text){
       authMessageEl.textContent = text;
+    }
+
+    function updateAuthUi(user){
+      const isLoggedIn = !!user;
+      authFormEl.hidden = isLoggedIn;
+      accountPanelEl.hidden = !isLoggedIn;
+      accountEmailEl.textContent = user?.email || "";
+      loginEl.disabled = false;
+      logoutEl.disabled = false;
+
+      if(isLoggedIn) {
+        setStatus(`Firebase 로그인됨: ${user.email || "사용자"}`);
+        setAuthMessage("Firestore 동기화가 켜졌습니다.");
+      } else {
+        firebaseEnabled = false;
+        docRef = null;
+        setStatus(firebaseReady ? "Firebase 로그인 필요" : "로컬 자동 저장 모드");
+        setAuthMessage(firebaseReady ? "등록된 이메일과 비밀번호로 로그인하세요." : "Firebase 설정값이 없어 로컬 저장만 사용합니다.");
+      }
     }
 
     function collectData(){
@@ -290,6 +326,10 @@
       });
 
       loginEl.addEventListener("click", loginFirebase);
+      logoutEl.addEventListener("click", logoutFirebase);
+      emailEl.addEventListener("keydown", event => {
+        if(event.key === "Enter") loginFirebase();
+      });
       passwordEl.addEventListener("keydown", event => {
         if(event.key === "Enter") loginFirebase();
       });
@@ -305,14 +345,32 @@
     async function connectFirestoreForUser(user, doc, getDoc){
       docRef = doc(db, COLLECTION_NAME, FIREBASE_DOC_ID);
       firebaseEnabled = true;
-      setStatus(`Firebase 로그인됨: ${user.email}`);
-      setAuthMessage("Firestore 동기화가 켜졌습니다.");
+      updateAuthUi(user);
 
       const snap = await getDoc(docRef);
       if(snap.exists()) {
         applyData(snap.data());
         localStorage.setItem(LOCAL_KEY, JSON.stringify(collectData()));
         setStatus("Firebase 기록 불러옴");
+      }
+    }
+
+    async function logoutFirebase(){
+      if(!auth || !signOut) return;
+
+      try {
+        logoutEl.disabled = true;
+        setAuthMessage("로그아웃 중입니다.");
+        await saveFirebaseNow();
+        await signOut(auth);
+        passwordEl.value = "";
+        setStatus("로그아웃됨 - 로컬 자동 저장 모드");
+        setAuthMessage("로그아웃했습니다. 로컬 저장은 계속 유지됩니다.");
+      } catch(e) {
+        console.error(e);
+        setAuthMessage("로그아웃 실패 - 잠시 후 다시 시도하세요.");
+      } finally {
+        logoutEl.disabled = false;
       }
     }
 
@@ -361,10 +419,10 @@
         const app = initializeApp(firebaseConfig);
         auth = authModule.getAuth(app);
         signInWithEmailAndPassword = authModule.signInWithEmailAndPassword;
+        signOut = authModule.signOut;
         db = getFirestore(app);
         emailEl.value = localStorage.getItem("pump_firebase_email") || "";
-        setStatus("Firebase 로그인 필요");
-        setAuthMessage("등록된 이메일과 비밀번호로 로그인하세요.");
+        updateAuthUi(null);
 
         authModule.onAuthStateChanged(auth, user => {
           if(user) {
@@ -375,8 +433,7 @@
               setAuthMessage("Firestore 접근 권한을 확인하세요.");
             });
           } else {
-            firebaseEnabled = false;
-            docRef = null;
+            updateAuthUi(null);
           }
         });
       } catch(e) {
